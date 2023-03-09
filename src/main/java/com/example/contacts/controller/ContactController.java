@@ -2,54 +2,55 @@ package com.example.contacts.controller;
 
 import com.example.contacts.model.Contact;
 import com.example.contacts.repository.ContactRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/contact")
 public class ContactController {
-    ContactRepository repository = new ContactRepository();
+
+    private final ContactRepository repository;
+
+    @Autowired
+    public ContactController(ContactRepository repository) {
+        this.repository = repository;
+    }
 
     @GetMapping("/contacts")
     public List<Contact> getContacts() {
-        return repository.getContacts();
+        return repository.findAll();
     }
 
     @PostMapping()
-    public boolean addContact(@RequestBody Contact contact) {
-        List<Contact> contacts = repository.getContacts();
-        boolean isContactAdded = contacts.add(contact);
-        repository.setContacts(contacts);
-        return isContactAdded;
+    public Contact addContact(@RequestBody Contact contact) {
+        return repository.save(contact);
     }
 
     @PutMapping("/{email}")
     public Contact updateContact(@PathVariable String email, @RequestBody Contact contact) {
-        List<Contact> contacts = repository.getContacts();
-        Contact persistedContact = getContact(email, contacts);
-        persistedContact.setName(contact.getName());
-        persistedContact.setPlace(contact.getPlace());
-        return persistedContact;
+        Contact persistedContact = repository.findByEmail(email);
+        if (contact.getName() != null) {
+            persistedContact.setName(contact.getName());
+        }
+        if (contact.getPlace() != null) {
+            persistedContact.setPlace(contact.getPlace());
+        }
+        return repository.save(persistedContact);
     }
 
     @GetMapping("/{email}")
     public Contact getContactByEmail(@PathVariable String email) {
-        return getContact(email, repository.getContacts());
+        return repository.findByEmail(email);
     }
 
-    @DeleteMapping
-    public boolean deleteContact(@PathVariable String email) {
-        List<Contact> contacts = repository.getContacts();
-        Contact contact = getContact(email, contacts);
-        return contacts.remove(contact);
+    @DeleteMapping("/{email}")
+    public void deleteContact(@PathVariable String email) {
+        log.info("delete by email was called");
+        repository.delete(repository.findByEmail(email));
     }
 
-    private static Contact getContact(String email, List<Contact> contacts) {
-        return contacts
-                .stream()
-                .filter(cont -> cont.getEmail().equals(email))
-                .findFirst()
-                .orElseThrow(RuntimeException::new);
-    }
 }

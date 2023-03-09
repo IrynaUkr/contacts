@@ -1,17 +1,13 @@
 package com.example.contacts.repository;
 
 import com.example.contacts.model.Contact;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.List;
+@Repository
+public interface ContactRepository extends JpaRepository<Contact, Long> {
+    Contact findByEmail(String email);
 
-public class ContactRepository {
-     private List<Contact> contacts = new ArrayList<>();
-    public List<Contact> getContacts() {
-        return contacts;
-    }
-    public void setContacts(List<Contact> contacts) {
-        this.contacts = contacts;
-    }
+    Contact deleteContactByEmail(String email);
 
 }
